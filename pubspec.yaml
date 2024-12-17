@@ -32,10 +32,15 @@ dependencies:
     sdk: flutter
   flutter_stripe: ^11.3.0
   flutter_stripe_web: ^6.3.0
-  http: ^1.0.0
+  http: ^0.13.6
   provider: ^6.0.1
+  geolocator: ^10.1.0
+  shared_preferences: ^2.2.2
+  image_picker: ^1.0.7
+  image_picker_web: ^3.1.1  # Pour le support web
 
-
+  # Remplacer flutter_google_places par une solution personnalisée
+  # flutter_google_places: ^0.3.0  # Retiré à cause du conflit
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

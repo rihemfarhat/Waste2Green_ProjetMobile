@@ -1,12 +1,64 @@
 import 'package:flutter/material.dart';
+import '../services/user_service.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
+  Future<void> _showUpdateDialog(BuildContext context, String title, String field) async {
+    final controller = TextEditingController();
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Update $title'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: 'New $title',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (controller.text.isNotEmpty) {
+                try {
+                  switch (field) {
+                    case 'username':
+                      await UserService.updateUsername(controller.text);
+                      break;
+                    case 'email':
+                      await UserService.updateEmail(controller.text);
+                      break;
+                    case 'password':
+                      await UserService.updatePassword(controller.text);
+                      break;
+                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('$title updated successfully')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error updating $title: $e')),
+                  );
+                }
+              }
+            },
+            child: Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2E8CF), // Set background color
+      backgroundColor: const Color(0xFFF2E8CF),
       appBar: AppBar(
         title: const Text(
           'Settings',
@@ -27,48 +79,92 @@ class SettingsPage extends StatelessWidget {
                       context,
                       title: 'Change Profile Picture',
                       icon: Icons.camera_alt,
-                      iconColor: const Color(0xffbc4749), // Passing icon color
-                      onTap: () {
-                        // Handle change profile picture logic
+                      iconColor: const Color(0xffbc4749),
+                      onTap: () async {
+                        try {
+                          await UserService.updateProfilePicture();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Profile picture updated')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error updating profile picture: $e')),
+                          );
+                        }
                       },
                     ),
                     _buildSettingOption(
                       context,
                       title: 'Change Username',
                       icon: Icons.person,
-                      iconColor: const Color(0xffbc4749), // Passing icon color
-                      onTap: () {
-                        // Handle change username logic
-                      },
+                      iconColor: const Color(0xffbc4749),
+                      onTap: () => _showUpdateDialog(context, 'Username', 'username'),
                     ),
                     _buildSettingOption(
                       context,
                       title: 'Change Email',
                       icon: Icons.email,
                       iconColor: const Color(0xffbc4749),
-                      onTap: () {
-                        // Handle change email logic
-                      },
+                      onTap: () => _showUpdateDialog(context, 'Email', 'email'),
                     ),
                     _buildSettingOption(
                       context,
                       title: 'Change Password',
                       icon: Icons.lock,
                       iconColor: const Color(0xffbc4749),
-                      onTap: () {
-                        // Handle change password logic
-                      },
+                      onTap: () => _showUpdateDialog(context, 'Password', 'password'),
                     ),
                     _buildSettingOption(
                       context,
                       title: 'Log Out',
                       icon: Icons.exit_to_app,
                       iconColor: const Color(0xffbc4749),
-                      onTap: () {
-                        // Handle log out logic
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Logged out successfully')),
-                        );
+                      onTap: () async {
+                        try {
+                          bool confirm = await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Confirm Logout'),
+                              content: Text('Are you sure you want to logout?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xffbc4749),
+                                  ),
+                                  child: Text('Logout'),
+                                ),
+                              ],
+                            ),
+                          ) ?? false;
+
+                          if (confirm) {
+                            await UserService.logout();
+                            
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                              '/login',
+                              (Route<dynamic> route) => false,
+                            );
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Logged out successfully'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error logging out: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       },
                     ),
                   ],

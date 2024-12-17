@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class SellPage extends StatefulWidget {
   @override
@@ -7,143 +9,232 @@ class SellPage extends StatefulWidget {
 
 class _SellPageState extends State<SellPage> {
   final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _quantityController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _typeController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  bool _isLoading = false;
 
-  // Controllers for form fields
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController quantityController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController typeController = TextEditingController();
+  Future<void> _submitPost() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  // Function to submit data
-  void _submitData() {
-    if (_formKey.currentState!.validate()) {
-      final data = {
-        "title": titleController.text,
-        "quantity": quantityController.text,
-        "price": priceController.text,
-        "location": locationController.text,
-        "type": typeController.text,
-      };
+    setState(() => _isLoading = true);
 
-      print("Data submitted: $data");
-      // Reset the form after submission
-      _formKey.currentState!.reset();
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:5000/api/announcements'),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          'title': _titleController.text,
+          'price': double.parse(_priceController.text),
+          'quantity': int.parse(_quantityController.text),
+          'location': _locationController.text,
+          'type': _typeController.text,
+          'imageUrl': _imageUrlController.text,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Post created successfully')),
+        );
+        Navigator.pushReplacementNamed(context, '/my-store');
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to create post');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating post: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: Color(0xFFF2E8CF), // Set background color
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+      appBar: AppBar(
+        title: Text('Create New Post'),
+        backgroundColor: Color(0xFF6A994E),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                width: double.infinity,
-                child: Container(
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: InputDecoration(
+                  labelText: 'Image URL',
+                  border: OutlineInputBorder(),
+                  helperText: 'Example: https://example.com/image.jpg',
+                  hintText: 'https://',
+                  prefixIcon: Icon(Icons.image),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an image URL';
+                  }
+                  if (!value.startsWith('http') && !value.startsWith('https')) {
+                    return 'Please enter a valid image URL starting with http:// or https://';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
+              SizedBox(height: 16),
+              if (_imageUrlController.text.isNotEmpty)
+                Container(
+                  height: 200,
                   decoration: BoxDecoration(
-                    color: Color(0xFF6A994E),
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 5,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 15),
-                  child: Center(
-                    child: Text(
-                      "I Sell!",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      _imageUrlController.text,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Error loading image: $error');
+                        return Container(
+                          color: Colors.grey[200],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Error loading image',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
               ),
-              SizedBox(height: 20.0),
-              Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 8,
-                        offset: Offset(0, 4),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _priceController,
+                decoration: InputDecoration(
+                  labelText: 'Price',
+                  border: OutlineInputBorder(),
+                  prefixText: '\$',
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a price';
+                  }
+                  if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                    return 'Please enter a valid price';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _quantityController,
+                decoration: InputDecoration(
+                  labelText: 'Quantity',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a quantity';
+                  }
+                  if (int.tryParse(value) == null || int.parse(value) <= 0) {
+                    return 'Please enter a valid quantity';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _locationController,
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a location';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _typeController,
+                decoration: InputDecoration(
+                  labelText: 'Type',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a type';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submitPost,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF6A994E),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Submit Post',
+                        style: TextStyle(fontSize: 16),
                       ),
-                    ],
-                  ),
-                  padding: EdgeInsets.all(8),
-                  child: Image.asset(
-                    'assets/image_2.jpg',
-                    height: 150,
-                    width: 150,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              SizedBox(
-                width: double.infinity,
-                child: Text(
-                  "More Informations:",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFBC4749),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    _buildTextField("Announcement Title:", titleController),
-                    SizedBox(height: 15.0),
-                    _buildTextField("Quantity:", quantityController, isNumeric: true),
-                    SizedBox(height: 15.0),
-                    _buildTextField("Price:", priceController, isNumeric: true),
-                    SizedBox(height: 15.0),
-                    _buildTextField("Location:", locationController),
-                    SizedBox(height: 15.0),
-                    _buildTextField("Type:", typeController),
-                    SizedBox(height: 30.0),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _submitData,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        child: Text(
-                          "Submit",
-                          style: const TextStyle(
-                            color: Color(0xFF6A994E),
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                            height: 1.5,
-                            fontFamily: 'Arial',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -152,37 +243,14 @@ class _SellPageState extends State<SellPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumeric = false}) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 5,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
-          decoration: InputDecoration(
-            labelText: label,
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return "Please enter $label";
-            }
-            return null;
-          },
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _priceController.dispose();
+    _quantityController.dispose();
+    _locationController.dispose();
+    _typeController.dispose();
+    _imageUrlController.dispose();
+    super.dispose();
   }
-}
+} 

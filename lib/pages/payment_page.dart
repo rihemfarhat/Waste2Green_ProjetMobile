@@ -1,333 +1,285 @@
 import 'package:flutter/material.dart';
-import 'my_cart.dart';
-import 'profile_page.dart';
-import 'BuyPage.dart';
-
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const PaymentPage(),
-    );
-  }
-}
+import 'OrderTracking.dart';
+import '../services/order_service.dart';
+import '../services/auth_service.dart'; // Pour obtenir le token
 
 class PaymentPage extends StatefulWidget {
-  const PaymentPage({super.key});
+  const PaymentPage({Key? key}) : super(key: key);
 
   @override
-  State<PaymentPage> createState() => _PaymentPageState();
+  _PaymentPageState createState() => _PaymentPageState();
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  final _formKey = GlobalKey<FormState>();
   String _selectedPaymentMethod = 'Credit Card';
-  final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryDateController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
-  bool _isLoading = false;
+  final _cardNumberController = TextEditingController();
+  final _expiryController = TextEditingController();
+  final _cvvController = TextEditingController();
+  final _cardHolderController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-  // Mock function simulating backend payment processing
-  Future<void> _processPayment() async {
-    if (!_formKey.currentState!.validate()) return;
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthentication();
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
-
-    final paymentData = {
-      'cardNumber': _cardNumberController.text,
-      'expiryDate': _expiryDateController.text,
-      'cvv': _cvvController.text,
-      'amount': _amountController.text,
-      'paymentMethod': _selectedPaymentMethod,
-    };
-
+  Future<void> _checkAuthentication() async {
     try {
-      final response = await mockApiCall(paymentData);
-
-      if (response['status'] == 'success') {
-        _showDialog(
-          title: 'Payment Successful',
-          content: 'Your payment has been processed successfully.',
-        );
-      } else {
-        _showDialog(
-          title: 'Payment Failed',
-          content: 'An error occurred while processing your payment.',
-        );
-      }
+      await AuthService.getToken();
     } catch (e) {
-      _showDialog(
-        title: 'Error',
-        content: 'Failed to connect to the server. Please try again later.',
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+      Navigator.pushReplacementNamed(context, '/login');
     }
-  }
-
-  Future<Map<String, dynamic>> mockApiCall(Map<String, String> paymentData) async {
-    await Future.delayed(const Duration(seconds: 2));
-    return {'status': 'success'}; // Simulating successful response
-  }
-
-  void _showDialog({required String title, required String content}) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Récupérer les informations de livraison
+    final deliveryInfo = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF2E8CF),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: Color(0xffbc4749)),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Color(0xffbc4749)),
-            onPressed: () {},
-          ),
-        ],
+        title: Text('Payment'),
+        backgroundColor: Color(0xFF6A994E),
       ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.green[50],
-          child: ListView(
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                ),
-                child: Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: Color(0xFF6A994E),
-                    fontSize: 24,
+              // Order Summary Card
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Order Summary',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Total Amount: ${deliveryInfo['total'].toStringAsFixed(2)} dt',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF6A994E),
+                        ),
+                      ),
+                      Divider(),
+                      Text(
+                        'Delivery To:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text('${deliveryInfo['name']}'),
+                      Text('${deliveryInfo['address']}'),
+                      Text('${deliveryInfo['phone']}'),
+                      Text('${deliveryInfo['email']}'),
+                    ],
                   ),
                 ),
               ),
-              ListTile(
-                leading: Icon(Icons.home, color: Color(0xFF6A994E)),
-                title: Text('Home', style: TextStyle(fontSize: 18)),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => BuyPage()),
-                  );
+              SizedBox(height: 20),
+
+              // Payment Method Selection
+              Text(
+                'Payment Method',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedPaymentMethod,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.payment),
+                ),
+                items: ['Credit Card', 'Debit Card', 'PayPal']
+                    .map((method) => DropdownMenuItem(
+                          value: method,
+                          child: Text(method),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedPaymentMethod = value!;
+                  });
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.shopping_cart, color: Color(0xFF6A994E)),
-                title: Text('Cart', style: TextStyle(fontSize: 18)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MyCart()),
-                  );
+              SizedBox(height: 20),
+
+              // Card Details
+              Text(
+                'Card Details',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _cardNumberController,
+                decoration: InputDecoration(
+                  labelText: 'Card Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.credit_card),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter card number';
+                  }
+                  return null;
                 },
               ),
-              ListTile(
-                leading: Icon(Icons.person, color: Color(0xFF6A994E)),
-                title: Text('Profile', style: TextStyle(fontSize: 18)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfilePage()),
-                  );
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _expiryController,
+                      decoration: InputDecoration(
+                        labelText: 'MM/YY',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _cvvController,
+                      decoration: InputDecoration(
+                        labelText: 'CVV',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _cardHolderController,
+                decoration: InputDecoration(
+                  labelText: 'Card Holder Name',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter card holder name';
+                  }
+                  return null;
                 },
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    // Process payment
+                    _processPayment(context, deliveryInfo);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF6A994E),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(
+                  'Pay Now',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ],
           ),
         ),
       ),
-      backgroundColor: const Color(0xFFF2E8CF),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const Text(
-                  'Enter Payment Details',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xffbc4749),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  controller: _cardNumberController,
-                  label: 'Card Number',
-                  hint: 'Enter 16-digit card number',
-                  icon: Icons.credit_card,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the card number';
-                    }
-                    if (value.length != 16) {
-                      return 'Card number must be 16 digits';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _expiryDateController,
-                        label: 'Expiry Date',
-                        hint: 'MM/YY',
-                        icon: Icons.calendar_today,
-                        keyboardType: TextInputType.datetime,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter expiry date';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _cvvController,
-                        label: 'CVV',
-                        hint: '3 digits',
-                        icon: Icons.lock,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter CVV';
-                          }
-                          if (value.length != 3) {
-                            return 'CVV must be 3 digits';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _amountController,
-                  label: 'Amount',
-                  hint: 'Enter the amount',
-                  icon: Icons.money,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the amount';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Enter a valid amount';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedPaymentMethod,
-                  decoration: InputDecoration(
-                    labelText: 'Payment Method',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  items: <String>['Credit Card', 'Debit Card', 'PayPal']
-                      .map((String method) {
-                    return DropdownMenuItem<String>(
-                      value: method,
-                      child: Text(method),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedPaymentMethod = newValue!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _processPayment,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    backgroundColor: const Color(0xFF6A994E),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text(
-                    'Submit Payment',
-                    style: TextStyle(color: Color(0xFFF2E8CF)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    required TextInputType keyboardType,
-    required String? Function(String?) validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon, color: const Color(0xFF6A994E)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
+  Future<void> _processPayment(BuildContext context, Map<String, dynamic> deliveryInfo) async {
+    try {
+      // Afficher l'indicateur de chargement
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(),
         ),
-      ),
-      keyboardType: keyboardType,
-      validator: validator,
-    );
+      );
+
+      // Simuler un délai de traitement du paiement
+      await Future.delayed(Duration(seconds: 2));
+
+      // Créer l'objet de commande
+      final orderDetails = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'total': deliveryInfo['total'],
+        'name': deliveryInfo['name'],
+        'address': deliveryInfo['address'],
+        'phone': deliveryInfo['phone'],
+        'email': deliveryInfo['email'],
+        'orderDate': DateTime.now().toString(),
+        'status': 'placed',
+        'paymentStatus': 'completed',
+        'paymentMethod': _selectedPaymentMethod,
+      };
+
+      // Fermer le dialogue de chargement
+      Navigator.pop(context);
+
+      // Naviguer vers la page de suivi
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OrderTracking(
+            orderDetails: orderDetails,
+          ),
+        ),
+      );
+    } catch (e) {
+      // Fermer le dialogue de chargement en cas d'erreur
+      Navigator.pop(context);
+      
+      // Afficher un message d'erreur
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error processing payment: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _cardNumberController.dispose();
+    _expiryController.dispose();
+    _cvvController.dispose();
+    _cardHolderController.dispose();
+    super.dispose();
   }
 }

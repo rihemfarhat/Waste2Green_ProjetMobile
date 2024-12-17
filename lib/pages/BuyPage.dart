@@ -241,6 +241,28 @@ class ProductCard extends StatelessWidget {
     required this.onAdd,
   });
 
+  void _addToCart(BuildContext context) {
+    CartManager().addToCart({
+      'name': name,
+      'weight': weight,
+      'price': price,
+      'imagePath': imagePath,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$name added to cart'),
+        duration: Duration(seconds: 2),
+        action: SnackBarAction(
+          label: 'VIEW CART',
+          onPressed: () {
+            Navigator.pushNamed(context, '/my_cart');
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -274,10 +296,39 @@ class ProductCard extends StatelessWidget {
           Text("$weight - $price"),
           IconButton(
             icon: Icon(Icons.add, color: Colors.white),
-            onPressed: onAdd,
+            onPressed: () => _addToCart(context),
           ),
         ],
       ),
     );
+  }
+}
+
+class CartManager {
+  static final CartManager _instance = CartManager._internal();
+  factory CartManager() => _instance;
+  CartManager._internal();
+
+  final List<Map<String, String>> _cartItems = [];
+
+  List<Map<String, String>> get cartItems => _cartItems;
+
+  void addToCart(Map<String, String> item) {
+    _cartItems.add(item);
+  }
+
+  void removeFromCart(int index) {
+    _cartItems.removeAt(index);
+  }
+
+  void clearCart() {
+    _cartItems.clear();
+  }
+
+  double get total {
+    return _cartItems.fold(0, (sum, item) {
+      final price = double.tryParse(item['price']?.replaceAll('dt', '') ?? '0') ?? 0;
+      return sum + price;
+    });
   }
 }

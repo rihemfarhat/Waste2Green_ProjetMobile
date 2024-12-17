@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile_page.dart';
 import 'BuyPage.dart';
+import 'order_validation_page.dart';
 
 void main() {
   runApp(const MyCart());
@@ -17,10 +18,10 @@ class MyCart extends StatelessWidget {
         primaryColor: const Color(0xFF6A994E),
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const CartPage(),
+      home: CartPage(),
       routes: {
         '/home': (context) => BuyPage(),
-        '/my_cart': (context) => const CartPage(),
+        '/my_cart': (context) => CartPage(),
         '/profile': (context) => const ProfilePage(),
         // Add other routes as needed
       },
@@ -29,106 +30,88 @@ class MyCart extends StatelessWidget {
 }
 
 class CartPage extends StatefulWidget {
-  const CartPage({super.key});
+  CartPage({Key? key}) : super(key: key);
 
   @override
-  State<CartPage> createState() => _CartPageState();
+  _CartPageState createState() => _CartPageState();
 }
 
 class _CartPageState extends State<CartPage> {
-  List<int> quantities = [2, 4];
-
-  void _incrementQuantity(int index) {
-    setState(() {
-      quantities[index]++;
-    });
-  }
-
-  void _decrementQuantity(int index) {
-    setState(() {
-      if (quantities[index] > 1) {
-        quantities[index]--;
-      }
-    });
-  }
+  final CartManager _cartManager = CartManager();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF6A994E),
-        title: const Text('My Cart'),
-        centerTitle: true,
+        title: Text('My Cart'),
+        backgroundColor: Color(0xFF6A994E),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: quantities.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
+      body: _cartManager.cartItems.isEmpty
+          ? Center(
+              child: Text('Your cart is empty'),
+            )
+          : ListView.builder(
+              itemCount: _cartManager.cartItems.length,
+              itemBuilder: (context, index) {
+                final item = _cartManager.cartItems[index];
+                return Card(
+                  margin: EdgeInsets.all(8),
+                  child: ListTile(
+                    leading: Image.asset(
+                      item['imagePath']!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
                     ),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: AssetImage(
-                          index == 0
-                              ? 'assets/image_2.jpg'
-                              : 'assets/image_3.jpg',
-                        ),
-                      ),
-                      title: Text(index == 0 ? 'Coffee Waste' : 'Organic Waste'),
-                      subtitle: const Text('1kg - 1 dt'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle, color: Color(0xffbc4749)),
-                            onPressed: () => _decrementQuantity(index),
-                          ),
-                          Text(
-                            '${quantities[index]}',
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle, color: Color(0xffbc4749)),
-                            onPressed: () => _incrementQuantity(index),
-                          ),
-                        ],
-                      ),
+                    title: Text(item['name']!),
+                    subtitle: Text('${item['weight']} - ${item['price']}'),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      onPressed: () {
+                        setState(() {
+                          _cartManager.removeFromCart(index);
+                        });
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6A994E),
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-              onPressed: () {
-                // Handle "Next" button press
+                  ),
+                );
               },
-              child: const Text(
-                'Next',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontFamily: 'Roboto',
-                  color: Color(0xFFF2E8CF),
-                ),
+            ),
+      bottomNavigationBar: _cartManager.cartItems.isEmpty
+          ? null
+          : Container(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Total: ${_cartManager.total.toStringAsFixed(2)} dt',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OrderValidationPage(
+                            total: _cartManager.total,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text('Checkout'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF6A994E),
+                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: const FooterWidget(),
     );
   }
 }

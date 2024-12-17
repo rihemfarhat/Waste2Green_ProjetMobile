@@ -10,6 +10,10 @@ import '/pages/SellPage.dart';
 import '/pages/SettingsPage.dart' as SettingsPage;
 import '/pages/SplashPage.dart';
 import '/pages/BuyPage.dart';
+import '/pages/edit_post.dart';
+import '/pages/order_validation_page.dart';
+import '/pages/OrderTracking.dart';  // Modifiez cet import
+import '/pages/LoginPage.dart';
 
 
 void main() {
@@ -31,15 +35,23 @@ class Waste2GreenApp extends StatelessWidget {
       initialRoute: '/profile',  // Set the initial route to '/profile'
       routes: {
         '/profile': (context) => const ProfilePage.ProfilePage(),  // Route for Profile Page with prefix
-        '/payment': (context) => const PaymentPage(),  // Route for Payment Page
+        '/payment': (context) => PaymentPage(),  // Route for Payment Page
         '/order_history': (context) => const OrderhistoryPage(),  // Route for Order History Page
         '/my_cart': (context) => const MyCart.MyCart(),
         '/rewards': (context) => const RewardsPage.RewardsPage(),
-        '/store': (context) => const MyStorePage(),
+        '/store': (context) => MyStorePage(),
         '/settings': (context) => const SettingsPage.SettingsPage(),
         '/home': (context) => BuyPage(),
         '/sell': (context) => SellPage(),
-
+        '/edit-post': (context) => EditPostPage(),
+        '/my-store': (context) => MyStorePage(),
+        '/order-validation': (context) => OrderValidationPage(
+          total: ModalRoute.of(context)!.settings.arguments as double,
+        ),
+        '/order-tracking': (context) => OrderTracking(
+          orderDetails: ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>,
+        ),
+        '/login': (context) => LoginPage(),
       },
       theme: ThemeData(
         primarySwatch: Colors.green,  // Set the primary color to green

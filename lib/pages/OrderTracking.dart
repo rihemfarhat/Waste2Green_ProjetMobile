@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'BuyPage.dart';
 import 'my_cart.dart';
@@ -7,9 +6,25 @@ import 'rewards_page.dart';
 import 'SellPage.dart';
 
 
-class OrderTracking extends StatelessWidget {
+class OrderTracking extends StatefulWidget {
+  final Map<String, dynamic> orderDetails;
+
+  const OrderTracking({
+    Key? key,
+    required this.orderDetails,
+  }) : super(key: key);
+
+  @override
+  _OrderTrackingState createState() => _OrderTrackingState();
+}
+
+class _OrderTrackingState extends State<OrderTracking> {
+  bool showTracking = true;
+
   @override
   Widget build(BuildContext context) {
+    print('Order Details received: ${widget.orderDetails}');
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -84,19 +99,36 @@ class OrderTracking extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Banner
+          // En-tête avec les détails de la commande
           Container(
             padding: EdgeInsets.all(16),
             color: Color(0xFF6A994E),
-            child: Center(
-              child: Text(
-                'Thank you for the order!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+            child: Column(
+              children: [
+                Text(
+                  'Thank you for your order!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+                SizedBox(height: 8),
+                Text(
+                  'Total Amount: ${widget.orderDetails['total'].toStringAsFixed(2)} dt',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'Delivery to: ${widget.orderDetails['name']}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
           // Tabs
@@ -104,112 +136,54 @@ class OrderTracking extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      showTracking = true;
+                    });
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: showTracking ? Colors.red : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.horizontal(left: Radius.circular(20)),
                     ),
+                    side: showTracking ? null : BorderSide(color: Colors.grey),
                   ),
-                  child: const Text('Tracking', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    'Tracking',
+                    style: TextStyle(
+                      color: showTracking ? Colors.white : Colors.black,
+                    ),
+                  ),
                 ),
               ),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      showTracking = false;
+                    });
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
+                    backgroundColor: !showTracking ? Colors.red : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.horizontal(right: Radius.circular(20)),
                     ),
-                    side: BorderSide(color: Colors.grey),
+                    side: !showTracking ? null : BorderSide(color: Colors.grey),
                   ),
-                  child: const Text('Order Details', style: TextStyle(color: Colors.black)),
+                  child: Text(
+                    'Order Details',
+                    style: TextStyle(
+                      color: !showTracking ? Colors.white : Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          // Order Info
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Order number',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      CircleAvatar(
-                        backgroundColor: Color(0xFF6A994E),
-                        radius: 25,
-                        child: Text(
-                          '75',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text('Pick-up time: 8:30 AM'),
-                  Text('Pick-up date: Thursday 29.11.2024'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Order Tracking
-          const Text(
-            'Order Tracking',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 10),
+          // Contenu conditionnel basé sur showTracking
           Expanded(
-            child: ListView(
-              children: [
-                // Custom progress indicator
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      child: Column(
-                        children: [
-                          _buildStepIndicator(true),
-                          _buildVerticalLine(true),
-                          _buildStepIndicator(false),
-                          _buildVerticalLine(false),
-                          _buildStepIndicator(false),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ListTile(
-                            title: Text('Order placed'),
-                            trailing: Icon(Icons.check_circle, color:Color(0xFF6A994E)),
-                          ),
-                          ListTile(
-                            title: Text('Preparing'),
-                            trailing: Icon(Icons.radio_button_unchecked, color: Colors.grey),
-                          ),
-                          ListTile(
-                            title: Text('Order is ready'),
-                            trailing: Icon(Icons.radio_button_unchecked, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            child: showTracking ? _buildTrackingView() : _buildOrderDetailsView(),
           ),
         ],
       ),
@@ -276,6 +250,203 @@ class OrderTracking extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTrackingView() {
+    return Column(
+      children: [
+        Card(
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Order number',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    CircleAvatar(
+                      backgroundColor: Color(0xFF6A994E),
+                      radius: 25,
+                      child: Text(
+                        widget.orderDetails['orderNumber']?.substring(widget.orderDetails['orderNumber'].length - 2) ?? '75',
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text('Pick-up time: 8:30 AM'),
+                Text('Pick-up date: ${widget.orderDetails['orderDate'] ?? 'Thursday 29.11.2024'}'),
+              ],
+            ),
+          ),
+        ),
+        // Order Tracking
+        const Text(
+          'Order Tracking',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: ListView(
+            children: [
+              // Custom progress indicator
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    child: Column(
+                      children: [
+                        _buildStepIndicator(true),
+                        _buildVerticalLine(true),
+                        _buildStepIndicator(false),
+                        _buildVerticalLine(false),
+                        _buildStepIndicator(false),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ListTile(
+                          title: Text('Order placed'),
+                          trailing: Icon(Icons.check_circle, color:Color(0xFF6A994E)),
+                        ),
+                        ListTile(
+                          title: Text('Preparing'),
+                          trailing: Icon(Icons.radio_button_unchecked, color: Colors.grey),
+                        ),
+                        ListTile(
+                          title: Text('Order is ready'),
+                          trailing: Icon(Icons.radio_button_unchecked, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOrderDetailsView() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Order Details',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A994E),
+                    ),
+                  ),
+                  Divider(),
+                  _buildDetailRow('Order Number:', widget.orderDetails['orderNumber'] ?? 'N/A'),
+                  _buildDetailRow('Order Date:', widget.orderDetails['orderDate'] ?? 'N/A'),
+                  _buildDetailRow('Total Amount:', '${widget.orderDetails['total'].toStringAsFixed(2)} dt'),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Delivery Information',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A994E),
+                    ),
+                  ),
+                  Divider(),
+                  _buildDetailRow('Name:', widget.orderDetails['name']),
+                  _buildDetailRow('Address:', widget.orderDetails['address']),
+                  _buildDetailRow('Phone:', widget.orderDetails['phone']),
+                  _buildDetailRow('Email:', widget.orderDetails['email']),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Delivery Schedule',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A994E),
+                    ),
+                  ),
+                  Divider(),
+                  _buildDetailRow('Pick-up Time:', '8:30 AM'),
+                  _buildDetailRow('Expected Delivery:', 'Thursday 29.11.2024'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
