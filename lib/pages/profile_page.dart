@@ -15,7 +15,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  String userName = "Haded Ahmed";
+  String userName = "Rihem Farhat";
   String userProfileImage = "assets/images/profile.jpg"; // Default image
   int userRating = 0;
   bool notificationsEnabled = true;
@@ -224,7 +224,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const Divider(color: Colors.black26),
           const SizedBox(height: 10),
           _buildListTile(title: 'My Store', onTap: () => Navigator.pushNamed(context, '/store')),
-          _buildListTile(title: 'Payment Details', onTap: () => Navigator.pushNamed(context, '/payment')),
+          _buildListTile(title: 'Rewards', onTap: () => Navigator.pushNamed(context, '/rewards')),
           _buildListTile(title: 'Order History', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const OrderhistoryPage()))),
           _buildListTile(title: 'Profile Settings', onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsPage()));

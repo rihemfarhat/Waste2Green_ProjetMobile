@@ -46,13 +46,8 @@ class _SignUpPageState extends State<SignUpPage> {
           SnackBar(content: Text(data['message'] ?? 'Registration successful!')),
         );
         Navigator.pop(context); // Retour à la page précédente (par ex., page de connexion)
-      } else {
-        // Gestion des erreurs
-        final data = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Registration failed!')),
-        );
-      }
+      } 
+      
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('An error occurred: $error')),

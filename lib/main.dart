@@ -32,8 +32,9 @@ class Waste2GreenApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     home: SplashPage(),
       title: 'Waste2Green App',
-      initialRoute: '/profile',  // Set the initial route to '/profile'
+      initialRoute: '/splash',  // Set the initial route to '/profile'
       routes: {
+        '/splash': (context) =>  SplashPage(),
         '/profile': (context) => const ProfilePage.ProfilePage(),  // Route for Profile Page with prefix
         '/payment': (context) => PaymentPage(),  // Route for Payment Page
         '/order_history': (context) => const OrderhistoryPage(),  // Route for Order History Page

@@ -194,6 +194,7 @@ class _MyStorePageState extends State<MyStorePage> {
                                           ? Image.network(
                                               post['imageUrl'],
                                               height: 200,
+                                    
                                               width: double.infinity,
                                               fit: BoxFit.cover,
                                               errorBuilder: (context, error, stackTrace) =>
@@ -206,17 +207,18 @@ class _MyStorePageState extends State<MyStorePage> {
                                                       color: Colors.grey[500],
                                                     ),
                                                   ),
-                                            )
-                                          : Container(
-                                              height: 200,
-                                              color: Colors.grey[300],
-                                              child: Icon(
-                                                Icons.image,
-                                                size: 50,
-                                                color: Colors.grey[500],
-                                              ),
-                                            ),
-                                    ),
+                                                      ): Center(
+                                                      child: Container(
+                                                        height: 200,
+                                                        color: Colors.grey[300],
+                                                        child: Icon(
+                                                          Icons.image,
+                                                          size: 50,
+                                                          color: Colors.grey[500],
+                                                        ),
+                                                      ),
+                                                    ),  
+                                                                                ),
                                     Positioned(
                                       top: 12,
                                       right: 12,
