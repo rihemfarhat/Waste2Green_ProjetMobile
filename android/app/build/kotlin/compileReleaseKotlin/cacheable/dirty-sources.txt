@@ -1,0 +1,1 @@
+C:\Users\rihem\OneDrive\Bureau\FinalMobile7000\Waste2Green\android\app\src\main\kotlin\com\example\waste2green\MainActivity.kt

@@ -118,7 +118,6 @@ class _SellPageState extends State<SellPage> {
                         );
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        print('Error loading image: $error');
                         return Container(
                           color: Colors.grey[200],
                           child: Column(
@@ -161,7 +160,7 @@ class _SellPageState extends State<SellPage> {
                 decoration: InputDecoration(
                   labelText: 'Price',
                   border: OutlineInputBorder(),
-                  prefixText: '\$',
+                  prefixText: '\DT ',
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -253,4 +252,4 @@ class _SellPageState extends State<SellPage> {
     _imageUrlController.dispose();
     super.dispose();
   }
-} 
+}

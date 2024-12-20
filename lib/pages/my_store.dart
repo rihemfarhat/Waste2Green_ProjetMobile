@@ -184,65 +184,66 @@ class _MyStorePageState extends State<MyStorePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 // Image avec overlay
-                                Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.vertical(
-                                        top: Radius.circular(20),
-                                      ),
-                                      child: post['imageUrl'] != null
-                                          ? Image.network(
-                                              post['imageUrl'],
-                                              height: 200,
-                                    
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) =>
-                                                  Container(
-                                                    height: 200,
-                                                    color: Colors.grey[300],
-                                                    child: Icon(
-                                                      Icons.image_not_supported,
-                                                      size: 50,
-                                                      color: Colors.grey[500],
-                                                    ),
-                                                  ),
-                                                      ): Center(
-                                                      child: Container(
-                                                        height: 200,
-                                                        color: Colors.grey[300],
-                                                        child: Icon(
-                                                          Icons.image,
-                                                          size: 50,
-                                                          color: Colors.grey[500],
-                                                        ),
-                                                      ),
-                                                    ),  
-                                                                                ),
-                                    Positioned(
-                                      top: 12,
-                                      right: 12,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Color(0xFF6A994E),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          '\$${post['price']}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                               Stack(
+  children: [
+    ClipRRect(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(20),
+      ),
+      child: post['imageUrl'] != null
+          ? Center(
+              child: Image.network(
+                post['imageUrl'],
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 50,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ),
+            )
+          : Center(
+              child: Container(
+                height: 500,
+                color: Colors.grey[300],
+                child: Icon(
+                  Icons.image,
+                  size: 50,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ),
+    ),
+    Positioned(
+      top: 12,
+      right: 12,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: Color(0xFF6A994E),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          '\$${post['price']}',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+    ),
+  ],
+),
                                 // Content
                                 Padding(
                                   padding: EdgeInsets.all(16),

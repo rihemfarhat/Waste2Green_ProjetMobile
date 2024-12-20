@@ -1,1 +1,0 @@
- C:\\Users\\rihem\\OneDrive\\Bureau\\Mobilefinale\\Waste2Green\\.dart_tool\\flutter_build\\b2c89ab650a00860b6fb1c9f142883a3\\native_assets.yaml: 

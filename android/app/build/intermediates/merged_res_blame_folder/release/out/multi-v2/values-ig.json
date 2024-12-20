@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.example.waste2green.app-mergeReleaseResources-97:/values-ig/values-ig.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\rihem\\.gradle\\caches\\transforms-3\\8c346bfc833b09bad8f631f55c960cb4\\transformed\\jetified-hcaptcha-20.52.2\\res\\values-ig\\values-ig.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "79",
+                        "endOffsets": "130"
+                    }
+                }
+            ]
+        }
+    ]
+}
